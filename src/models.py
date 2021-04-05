@@ -94,7 +94,7 @@ class GMVAE:
             x_u = x_u.to(self.device)
             
             loss = self.model.train({"x": x, "y": y, "x_u": x_u})
-            train_loss += loss
+            train_loss += loss.detach().item()
 
         train_loss = train_loss * self.unlabelled_loader.batch_size / len(self.unlabelled_loader.dataset)
         print('Epoch: {} Train loss: {:.4f}'.format(epoch, train_loss))
@@ -109,7 +109,7 @@ class GMVAE:
             y = torch.eye(self.y_dim)[_y].to(self.device)
             x = x.to(self.device)
             loss = self.model.test({"x": x, "y": y})
-            test_loss += loss
+            test_loss += loss.detach().item()
             self.f.eval()
             with torch.no_grad():
                 pred_y = self.f.sample_mean({"x": x}).argmax(dim=1)
@@ -173,7 +173,6 @@ class GMVAE:
                 writer.add_scalar("test_precision_" + label, precision[label], epoch)
             #latent = plot_latent(self.f, self.q, x, y, cmap)
             #writer.add_images("Image_latent", latent, epoch)
-
     def draw(self, image_dir, out_path, kernel_size, batch_size):
         with Image.open(glob(image_dir+"/*")[0]) as img:
             w, h = img.size
@@ -186,9 +185,9 @@ class GMVAE:
         with torch.no_grad():
             for x in tqdm(loader):
                 x = x.to(self.device)
-                y = self.f.sample_mean({"x": x})
-                pred_y = y.argmax(1).detach().cpu()
-                conf = y.max(1)[0].detach().cpu()
+                y = self.f.sample_mean({"x": x}).detach().cpu()
+                pred_y = y.argmax(1)
+                conf = y.max(1)[0]
                 pred_ys.append(pred_y)
                 confs.append(conf)
         

@@ -104,6 +104,8 @@ def set_patches(label_dir, image_dir, out_dir, kernel_size, batch_size=5000):
             patch = F.interpolate(patch, [kernel_size[1], kernel_size[0]])
 
             patch = torch.reshape(patch, (patch.shape[0], -1))
+            patch = patch * 255
+            patch = patch.to(torch.uint8)
             label = mask[v,u][0]
             tensors[str(label)].append(patch)
 
@@ -118,7 +120,7 @@ def set_patches(label_dir, image_dir, out_dir, kernel_size, batch_size=5000):
 # Data Loaders
 def load_npy(path):
     ts = torch.tensor(np.load(path))
-    return ts
+    return ts / 255
 
 class LabelledDS(Dataset):
     def __init__(self, patch_dir):
